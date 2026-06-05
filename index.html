@@ -3,57 +3,293 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mail</title>
+  <title>318mail</title>
   <style>
-    /* （CSSのデザインは前回と全く同じなので省略せずにそのまま書きます） */
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f6f8fc; color: #333; height: 100vh; overflow: hidden; }
-    #lock-screen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: url('https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=1920&q=80') no-repeat center center/cover; display: flex; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.5s ease; }
-    .lock-panel { background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 40px; border-radius: 20px; text-align: center; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.3); width: 320px; }
-    .lock-title { color: #fff; font-size: 28px; font-weight: bold; margin-bottom: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
-    .lock-subtitle { color: #f1f1f1; font-size: 14px; margin-bottom: 25px; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
-    .pin-input { width: 100%; padding: 12px; font-size: 18px; border: none; border-radius: 8px; margin-bottom: 20px; text-align: center; letter-spacing: 5px; outline: none; background: rgba(255, 255, 255, 0.8); }
-    .unlock-btn { width: 100%; padding: 12px; background-color: #1a73e8; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
-    .unlock-btn:hover { background-color: #1557b0; }
-    #error-msg { color: #ff5252; font-size: 13px; margin-top: 10px; display: none; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
-    #app-container { display: none; height: 100vh; width: 100vw; display: flex; }
-    .sidebar { width: 250px; background-color: #fff; padding: 20px 10px; border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; }
-    .sidebar-title { font-size: 20px; font-weight: bold; margin-bottom: 30px; padding-left: 10px; color: #1a73e8; }
-    .menu-item { padding: 12px 15px; margin-bottom: 5px; border-radius: 0 20px 20px 0; cursor: pointer; font-weight: 500; transition: background 0.2s; }
-    .menu-item:hover { background-color: #f1f3f4; }
-    .menu-item.active { background-color: #e8f0fe; color: #1a73e8; }
-    .main-content { flex: 1; display: flex; flex-direction: column; }
-    .header { padding: 20px; background-color: #fff; border-bottom: 1px solid #e0e0e0; font-size: 24px; }
-    .email-list { flex: 1; overflow-y: auto; background-color: #fff; }
-    .email-item { display: flex; align-items: center; padding: 15px 20px; border-bottom: 1px solid #f1f3f4; cursor: pointer; transition: box-shadow 0.2s; }
-    .email-item:hover { box-shadow: inset 1px 0 0 #dadce0, inset -1px 0 0 #dadce0, 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15); z-index: 1; }
-    .star { font-size: 20px; color: #ccc; margin-right: 15px; cursor: pointer; }
-    .star.active { color: #fbbc04; }
-    .sender { width: 150px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .subject { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #202124; }
-    .subject span { color: #5f6368; font-weight: normal; margin-left: 10px; }
-    .time { font-size: 12px; color: #5f6368; width: 60px; text-align: right; }
-    .fab { position: fixed; bottom: 30px; right: 30px; background-color: #1a73e8; color: white; border: none; border-radius: 16px; padding: 15px 24px; font-size: 16px; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.2); cursor: pointer; display: flex; align-items: center; gap: 10px; transition: background 0.2s, transform 0.1s; }
-    .fab:hover { background-color: #1557b0; box-shadow: 0 6px 10px rgba(0,0,0,0.3); }
-    .fab:active { transform: scale(0.95); }
-    .fab::before { content: '✏️'; font-size: 20px; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      /* ★ Windows 10のあの「洞窟から見える海辺と光」風の壁紙に変更！ */
+      background: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1920&q=80') no-repeat center center/cover;
+    }
+
+    /* ------------------------------
+       Windows 10風 ロック画面
+    ------------------------------ */
+    #lock-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.15); /* 壁紙の色味を少し深くする */
+      backdrop-filter: blur(25px); /* Windows風のしっかりしたボケ味 */
+      -webkit-backdrop-filter: blur(25px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: opacity 0.5s ease, visibility 0.5s;
+    }
+
+    .win10-panel {
+      text-align: center;
+      width: 300px;
+    }
+
+    /* Windows10の丸いユーザーアイコン風 */
+    .win10-avatar {
+      width: 120px;
+      height: 120px;
+      background-color: rgba(255, 255, 255, 0.2);
+      border: 2px solid rgba(255, 255, 255, 0.6);
+      border-radius: 50%;
+      margin: 0 auto 20px auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+    .win10-avatar::before {
+      content: '👤';
+      font-size: 60px;
+      color: rgba(255,255,255,0.9);
+    }
+
+    .win10-username {
+      color: #fff;
+      font-size: 24px;
+      font-weight: 300;
+      margin-bottom: 20px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    }
+
+    /* Win10風のシンプルな四角い入力欄 */
+    .win10-input-container {
+      display: flex;
+      border: 2px solid rgba(255,255,255,0.5);
+      background: rgba(0, 0, 0, 0.4);
+    }
+    .win10-input-container:focus-within {
+      border-color: #0078d7;
+    }
+
+    .pin-input {
+      flex: 1;
+      padding: 8px 12px;
+      font-size: 16px;
+      border: none;
+      background: transparent;
+      color: #fff;
+      outline: none;
+    }
+    .pin-input::placeholder {
+      color: rgba(255,255,255,0.6);
+    }
+
+    .unlock-btn {
+      padding: 0 15px;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+      border-left: 1px solid rgba(255,255,255,0.3);
+    }
+    .unlock-btn:hover {
+      background: rgba(255,255,255,0.4);
+    }
+
+    #error-msg {
+      color: #ffb3b3;
+      font-size: 14px;
+      margin-top: 15px;
+      display: none;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    }
+
+    /* ------------------------------
+       メールアプリ（壁紙の上のデスクトップ風）
+    ------------------------------ */
+    #app-container {
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      background: rgba(0, 0, 0, 0.25); /* 砂浜の明るさに負けないよう、少しだけ暗めのフィルター */
+    }
+
+    /* 左側のすりガラスサイドバー */
+    .sidebar {
+      width: 250px;
+      background: rgba(0, 0, 0, 0.4); /* 暗めのすりガラスにして文字を見やすく */
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      padding: 20px 10px;
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar-title {
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 30px;
+      padding-left: 10px;
+      color: #fff;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .menu-item {
+      padding: 12px 15px;
+      margin-bottom: 5px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.7);
+      transition: background 0.2s;
+    }
+    .menu-item:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+    .menu-item.active {
+      background-color: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    /* メインエリア */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+    }
+    .header {
+      padding: 10px 0 20px 10px;
+      font-size: 24px;
+      color: #fff;
+      font-weight: bold;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+    .email-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 10px;
+    }
+
+    /* Discordの通知ポップアップ風メールデザイン */
+    .email-item {
+      display: flex;
+      align-items: flex-start;
+      padding: 16px;
+      background: #313338;
+      border-radius: 8px;
+      border-left: 4px solid #5865F2;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      cursor: pointer;
+      transition: transform 0.2s, background-color 0.2s;
+      color: #dbdee1;
+    }
+    .email-item:hover {
+      transform: translateY(-2px);
+      background: #383a40;
+    }
+    
+    .star {
+      font-size: 20px;
+      color: #4e5058;
+      margin-right: 15px;
+      margin-top: -2px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .star.active {
+      color: #fbbc04;
+    }
+    
+    .email-body {
+      flex: 1;
+    }
+    .email-header-line {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .sender {
+      font-weight: bold;
+      color: #fff;
+      font-size: 15px;
+    }
+    .time {
+      font-size: 12px;
+      color: #949ba4;
+    }
+    .subject {
+      font-size: 14px;
+      color: #dbdee1;
+      line-height: 1.4;
+    }
+    .subject span {
+      color: #b5bac1;
+      margin-left: 5px;
+    }
+
+    /* 右下の新規作成ボタン */
+    .fab {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background-color: #5865F2;
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 15px 28px;
+      font-size: 16px;
+      font-weight: bold;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .fab:hover {
+      background-color: #4752C4;
+    }
+    .fab:active {
+      transform: scale(0.95);
+    }
+    .fab::before {
+      content: '✏️';
+      font-size: 18px;
+    }
   </style>
 </head>
 <body>
 
   <div id="lock-screen">
-    <div class="lock-panel">
-      <div class="lock-title">Nano Banana</div>
-      <div class="lock-subtitle">Secure Mail System</div>
-      <input type="password" id="pin-input" class="pin-input" placeholder="Password">
-      <button class="unlock-btn" onclick="checkPin()" id="unlock-btn">ロック解除</button>
-      <div id="error-msg">パスワードが違います</div>
+    <div class="win10-panel">
+      <div class="win10-avatar"></div>
+      <div class="win10-username">318mail</div>
+      
+      <div class="win10-input-container">
+        <input type="password" id="pin-input" class="pin-input" placeholder="パスワード">
+        <button class="unlock-btn" onclick="checkPin()" id="unlock-btn">➔</button>
+      </div>
+      <div id="error-msg">パスワードが正しくありません。入力し直してください。</div>
     </div>
   </div>
 
-  <div id="app-container" style="display: none;">
+  <div id="app-container" style="visibility: hidden; opacity: 0; transition: opacity 0.5s ease;">
     <aside class="sidebar">
-      <div class="sidebar-title">✉️ Nano Banana</div>
+      <div class="sidebar-title">✉️ 318mail</div>
       <div class="menu-item active">📥 受信トレイ</div>
       <div class="menu-item">⭐ お気に入り</div>
       <div class="menu-item">📤 送信済み</div>
@@ -62,12 +298,28 @@
 
     <main class="main-content">
       <div class="header">受信トレイ</div>
+      
       <div class="email-list">
         <div class="email-item">
           <div class="star">☆</div>
-          <div class="sender">システム通知</div>
-          <div class="subject">セキュアログイン成功 <span>- バックエンドで安全に認証されました。</span></div>
-          <div class="time">たった今</div>
+          <div class="email-body">
+            <div class="email-header-line">
+              <span class="sender">318mail System</span>
+              <span class="time">たった今</span>
+            </div>
+            <div class="subject">アップデート完了 <span>- Windows 10風のセキュアな壁紙とサインインUIが適用されました。</span></div>
+          </div>
+        </div>
+
+        <div class="email-item">
+          <div class="star active">★</div>
+          <div class="email-body">
+            <div class="email-header-line">
+              <span class="sender">Resend API</span>
+              <span class="time">昨日</span>
+            </div>
+            <div class="subject">Webhook接続成功 <span>- 318mail システムとのシームレスな連携が完了しました。</span></div>
+          </div>
         </div>
       </div>
     </main>
@@ -85,12 +337,10 @@
 
       if (!inputVal) return;
 
-      // ボタンを一時的に無効化（連打防止）
-      unlockBtn.innerText = "確認中...";
+      unlockBtn.innerText = "…";
       unlockBtn.disabled = true;
 
       try {
-        // 裏側の /api/login にパスワードを送信して確認
         const response = await fetch('/api/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -100,29 +350,25 @@
         const data = await response.json();
 
         if (response.ok && data.success) {
-          // 成功！
           errorMsg.style.display = 'none';
+          
           lockScreen.style.opacity = '0';
-          setTimeout(() => {
-            lockScreen.style.display = 'none';
-            appContainer.style.display = 'flex';
-          }, 500);
+          lockScreen.style.visibility = 'hidden';
+          
+          appContainer.style.visibility = 'visible';
+          appContainer.style.opacity = '1';
         } else {
-          // 失敗...
           throw new Error('Invalid PIN');
         }
       } catch (error) {
-        // パスワード間違い、または通信エラー
         errorMsg.style.display = 'block';
         document.getElementById('pin-input').value = '';
       } finally {
-        // ボタンを元に戻す
-        unlockBtn.innerText = "ロック解除";
+        unlockBtn.innerText = "➔";
         unlockBtn.disabled = false;
       }
     }
 
-    // Enterキー対応
     document.getElementById('pin-input').addEventListener('keypress', function (e) {
       if (e.key === 'Enter') {
         checkPin();
