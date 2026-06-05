@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mail</title>
+  <style>
+    /* （CSSのデザインは前回と全く同じなので省略せずにそのまま書きます） */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f6f8fc; color: #333; height: 100vh; overflow: hidden; }
+    #lock-screen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: url('https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=1920&q=80') no-repeat center center/cover; display: flex; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.5s ease; }
+    .lock-panel { background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 40px; border-radius: 20px; text-align: center; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.3); width: 320px; }
+    .lock-title { color: #fff; font-size: 28px; font-weight: bold; margin-bottom: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+    .lock-subtitle { color: #f1f1f1; font-size: 14px; margin-bottom: 25px; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+    .pin-input { width: 100%; padding: 12px; font-size: 18px; border: none; border-radius: 8px; margin-bottom: 20px; text-align: center; letter-spacing: 5px; outline: none; background: rgba(255, 255, 255, 0.8); }
+    .unlock-btn { width: 100%; padding: 12px; background-color: #1a73e8; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+    .unlock-btn:hover { background-color: #1557b0; }
+    #error-msg { color: #ff5252; font-size: 13px; margin-top: 10px; display: none; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+    #app-container { display: none; height: 100vh; width: 100vw; display: flex; }
+    .sidebar { width: 250px; background-color: #fff; padding: 20px 10px; border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; }
+    .sidebar-title { font-size: 20px; font-weight: bold; margin-bottom: 30px; padding-left: 10px; color: #1a73e8; }
+    .menu-item { padding: 12px 15px; margin-bottom: 5px; border-radius: 0 20px 20px 0; cursor: pointer; font-weight: 500; transition: background 0.2s; }
+    .menu-item:hover { background-color: #f1f3f4; }
+    .menu-item.active { background-color: #e8f0fe; color: #1a73e8; }
+    .main-content { flex: 1; display: flex; flex-direction: column; }
+    .header { padding: 20px; background-color: #fff; border-bottom: 1px solid #e0e0e0; font-size: 24px; }
+    .email-list { flex: 1; overflow-y: auto; background-color: #fff; }
+    .email-item { display: flex; align-items: center; padding: 15px 20px; border-bottom: 1px solid #f1f3f4; cursor: pointer; transition: box-shadow 0.2s; }
+    .email-item:hover { box-shadow: inset 1px 0 0 #dadce0, inset -1px 0 0 #dadce0, 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15); z-index: 1; }
+    .star { font-size: 20px; color: #ccc; margin-right: 15px; cursor: pointer; }
+    .star.active { color: #fbbc04; }
+    .sender { width: 150px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .subject { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #202124; }
+    .subject span { color: #5f6368; font-weight: normal; margin-left: 10px; }
+    .time { font-size: 12px; color: #5f6368; width: 60px; text-align: right; }
+    .fab { position: fixed; bottom: 30px; right: 30px; background-color: #1a73e8; color: white; border: none; border-radius: 16px; padding: 15px 24px; font-size: 16px; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.2); cursor: pointer; display: flex; align-items: center; gap: 10px; transition: background 0.2s, transform 0.1s; }
+    .fab:hover { background-color: #1557b0; box-shadow: 0 6px 10px rgba(0,0,0,0.3); }
+    .fab:active { transform: scale(0.95); }
+    .fab::before { content: '✏️'; font-size: 20px; }
+  </style>
+</head>
+<body>
+
+  <div id="lock-screen">
+    <div class="lock-panel">
+      <div class="lock-title">Nano Banana</div>
+      <div class="lock-subtitle">Secure Mail System</div>
+      <input type="password" id="pin-input" class="pin-input" placeholder="Password">
+      <button class="unlock-btn" onclick="checkPin()" id="unlock-btn">ロック解除</button>
+      <div id="error-msg">パスワードが違います</div>
+    </div>
+  </div>
+
+  <div id="app-container" style="display: none;">
+    <aside class="sidebar">
+      <div class="sidebar-title">✉️ Nano Banana</div>
+      <div class="menu-item active">📥 受信トレイ</div>
+      <div class="menu-item">⭐ お気に入り</div>
+      <div class="menu-item">📤 送信済み</div>
+      <div class="menu-item">🗑️ ゴミ箱</div>
+    </aside>
+
+    <main class="main-content">
+      <div class="header">受信トレイ</div>
+      <div class="email-list">
+        <div class="email-item">
+          <div class="star">☆</div>
+          <div class="sender">システム通知</div>
+          <div class="subject">セキュアログイン成功 <span>- バックエンドで安全に認証されました。</span></div>
+          <div class="time">たった今</div>
+        </div>
+      </div>
+    </main>
+
+    <button class="fab" onclick="alert('新規メール作成画面を開きます！')">作成</button>
+  </div>
+
+  <script>
+    async function checkPin() {
+      const inputVal = document.getElementById('pin-input').value;
+      const errorMsg = document.getElementById('error-msg');
+      const lockScreen = document.getElementById('lock-screen');
+      const appContainer = document.getElementById('app-container');
+      const unlockBtn = document.getElementById('unlock-btn');
+
+      if (!inputVal) return;
+
+      // ボタンを一時的に無効化（連打防止）
+      unlockBtn.innerText = "確認中...";
+      unlockBtn.disabled = true;
+
+      try {
+        // 裏側の /api/login にパスワードを送信して確認
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pin: inputVal })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          // 成功！
+          errorMsg.style.display = 'none';
+          lockScreen.style.opacity = '0';
+          setTimeout(() => {
+            lockScreen.style.display = 'none';
+            appContainer.style.display = 'flex';
+          }, 500);
+        } else {
+          // 失敗...
+          throw new Error('Invalid PIN');
+        }
+      } catch (error) {
+        // パスワード間違い、または通信エラー
+        errorMsg.style.display = 'block';
+        document.getElementById('pin-input').value = '';
+      } finally {
+        // ボタンを元に戻す
+        unlockBtn.innerText = "ロック解除";
+        unlockBtn.disabled = false;
+      }
+    }
+
+    // Enterキー対応
+    document.getElementById('pin-input').addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') {
+        checkPin();
+      }
+    });
+  </script>
+</body>
+</html>
