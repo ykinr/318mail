@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>318mail</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     * {
       box-sizing: border-box;
@@ -14,12 +15,11 @@
       font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
       height: 100vh;
       overflow: hidden;
-      /* ★ Windows 10のあの「洞窟から見える海辺と光」風の壁紙に変更！ */
       background: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1920&q=80') no-repeat center center/cover;
     }
 
     /* ------------------------------
-       Windows 10風 ロック画面
+       Windows 10風 ロック画面 (時計)
     ------------------------------ */
     #lock-screen {
       position: fixed;
@@ -27,13 +27,51 @@
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: rgba(0, 0, 0, 0.15); /* 壁紙の色味を少し深くする */
-      backdrop-filter: blur(25px); /* Windows風のしっかりしたボケ味 */
+      z-index: 9999;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 0 0 100px 100px;
+      transition: transform 0.5s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 0.5s;
+    }
+
+    .lock-time-container {
+      color: #fff;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      user-select: none;
+    }
+
+    .lock-time {
+      font-size: 100px;
+      font-weight: 100;
+      line-height: 1;
+    }
+
+    .lock-date {
+      font-size: 32px;
+      font-weight: 300;
+      margin-top: 10px;
+    }
+
+    /* ------------------------------
+       Windows 10風 ログイン画面 (PIN入力)
+    ------------------------------ */
+    #login-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.15);
+      backdrop-filter: blur(25px);
       -webkit-backdrop-filter: blur(25px);
       display: flex;
       justify-content: center;
       align-items: center;
-      z-index: 9999;
+      z-index: 9998;
+      opacity: 0;
+      visibility: hidden;
       transition: opacity 0.5s ease, visibility 0.5s;
     }
 
@@ -42,7 +80,6 @@
       width: 300px;
     }
 
-    /* Windows10の丸いユーザーアイコン風 */
     .win10-avatar {
       width: 120px;
       height: 120px;
@@ -55,9 +92,8 @@
       align-items: center;
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
-    .win10-avatar::before {
-      content: '👤';
-      font-size: 60px;
+    .win10-avatar i {
+      font-size: 55px;
       color: rgba(255,255,255,0.9);
     }
 
@@ -69,7 +105,6 @@
       text-shadow: 0 2px 4px rgba(0,0,0,0.4);
     }
 
-    /* Win10風のシンプルな四角い入力欄 */
     .win10-input-container {
       display: flex;
       border: 2px solid rgba(255,255,255,0.5);
@@ -97,9 +132,12 @@
       background: rgba(255,255,255,0.2);
       color: white;
       border: none;
-      font-size: 16px;
+      font-size: 14px;
       cursor: pointer;
       border-left: 1px solid rgba(255,255,255,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .unlock-btn:hover {
       background: rgba(255,255,255,0.4);
@@ -114,21 +152,23 @@
     }
 
     /* ------------------------------
-       メールアプリ（壁紙の上のデスクトップ風）
+       メールアプリ本体
     ------------------------------ */
     #app-container {
       height: 100vh;
       width: 100vw;
       display: flex;
-      background: rgba(0, 0, 0, 0.25); /* 砂浜の明るさに負けないよう、少しだけ暗めのフィルター */
+      background: rgba(0, 0, 0, 0.1);
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.5s ease;
     }
 
-    /* 左側のすりガラスサイドバー */
     .sidebar {
       width: 250px;
-      background: rgba(0, 0, 0, 0.4); /* 暗めのすりガラスにして文字を見やすく */
-      backdrop-filter: blur(15px);
-      -webkit-backdrop-filter: blur(15px);
+      background: rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       padding: 20px 10px;
       border-right: 1px solid rgba(255, 255, 255, 0.1);
       display: flex;
@@ -141,6 +181,9 @@
       padding-left: 10px;
       color: #fff;
       text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
     .menu-item {
       padding: 12px 15px;
@@ -150,18 +193,25 @@
       font-weight: 500;
       color: rgba(255, 255, 255, 0.7);
       transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .menu-item i {
+      width: 20px;
+      text-align: center;
     }
     .menu-item:hover {
       background-color: rgba(255, 255, 255, 0.1);
       color: #fff;
     }
     .menu-item.active {
-      background-color: rgba(255, 255, 255, 0.2);
+      background-color: rgba(255, 255, 255, 0.15);
       color: #fff;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
     }
 
-    /* メインエリア */
     .main-content {
       flex: 1;
       display: flex;
@@ -173,45 +223,67 @@
       font-size: 24px;
       color: #fff;
       font-weight: bold;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      text-shadow: 0 2px 5px rgba(0,0,0,0.4);
     }
     .email-list {
       flex: 1;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 15px;
       padding: 10px;
     }
 
-    /* Discordの通知ポップアップ風メールデザイン */
+    .menu-view {
+      display: none;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .menu-view.active-view {
+      display: flex;
+    }
+
+    /* リキッドガラス通知 */
     .email-item {
       display: flex;
       align-items: flex-start;
-      padding: 16px;
-      background: #313338;
-      border-radius: 8px;
-      border-left: 4px solid #5865F2;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      padding: 18px;
+      background: rgba(255, 255, 255, 0.08); 
+      backdrop-filter: blur(16px) saturate(120%);
+      -webkit-backdrop-filter: blur(16px) saturate(120%);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-left: 5px solid rgba(255, 255, 255, 0.6); 
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
       cursor: pointer;
-      transition: transform 0.2s, background-color 0.2s;
-      color: #dbdee1;
-    }
-    .email-item:hover {
-      transform: translateY(-2px);
-      background: #383a40;
+      transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+      color: #f1f1f1;
     }
     
-    .star {
-      font-size: 20px;
-      color: #4e5058;
-      margin-right: 15px;
-      margin-top: -2px;
-      cursor: pointer;
-      user-select: none;
+    .email-item:hover {
+      transform: translateY(-3px) scale(1.005);
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.35);
+      border-left-color: #fff;
+      box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.3);
     }
-    .star.active {
-      color: #fbbc04;
+    
+    .star-btn {
+      background: none;
+      border: none;
+      font-size: 18px;
+      color: rgba(255, 255, 255, 0.4);
+      margin-right: 15px;
+      cursor: pointer;
+      outline: none;
+      transition: color 0.2s;
+    }
+    .star-btn:hover {
+      color: rgba(255, 255, 255, 0.8);
+    }
+    .star-btn.active {
+      color: #fbbc04 !important;
+      text-shadow: 0 0 8px rgba(251, 188, 4, 0.6);
     }
     
     .email-body {
@@ -220,160 +292,277 @@
     .email-header-line {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 4px;
+      margin-bottom: 5px;
     }
     .sender {
-      font-weight: bold;
+      font-weight: 600;
       color: #fff;
       font-size: 15px;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.2);
     }
     .time {
       font-size: 12px;
-      color: #949ba4;
+      color: rgba(255, 255, 255, 0.6);
     }
     .subject {
       font-size: 14px;
-      color: #dbdee1;
-      line-height: 1.4;
+      color: rgba(255, 255, 255, 0.9);
+      line-height: 1.5;
     }
     .subject span {
-      color: #b5bac1;
+      color: rgba(255, 255, 255, 0.6);
       margin-left: 5px;
+      font-weight: 300;
     }
 
-    /* 右下の新規作成ボタン */
     .fab {
       position: fixed;
       bottom: 30px;
       right: 30px;
-      background-color: #5865F2;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       color: white;
-      border: none;
+      border: 1px solid rgba(255, 255, 255, 0.3);
       border-radius: 50px;
       padding: 15px 28px;
       font-size: 16px;
       font-weight: bold;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 10px;
-      transition: background 0.2s, transform 0.1s;
+      transition: all 0.2s;
     }
     .fab:hover {
-      background-color: #4752C4;
+      background: rgba(255, 255, 255, 0.25);
+      border-color: rgba(255, 255, 255, 0.5);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.3);
+      transform: translateY(-2px);
     }
     .fab:active {
       transform: scale(0.95);
-    }
-    .fab::before {
-      content: '✏️';
-      font-size: 18px;
     }
   </style>
 </head>
 <body>
 
-  <div id="lock-screen">
-    <div class="win10-panel">
-      <div class="win10-avatar"></div>
+  <div id="lock-screen" onclick="showLoginScreen()">
+    <div class="lock-time-container">
+      <div id="clock" class="lock-time">00:00</div>
+      <div id="date" class="lock-date">1月1日(月)</div>
+    </div>
+  </div>
+
+  <div id="login-screen" onclick="hideLoginScreen(event)">
+    <div class="win10-panel" onclick="event.stopPropagation()">
+      <div class="win10-avatar">
+        <i class="fa-regular fa-user"></i>
+      </div>
       <div class="win10-username">318mail</div>
       
       <div class="win10-input-container">
         <input type="password" id="pin-input" class="pin-input" placeholder="パスワード">
-        <button class="unlock-btn" onclick="checkPin()" id="unlock-btn">➔</button>
+        <button class="unlock-btn" onclick="checkPin()"><i class="fa-solid fa-arrow-right"></i></button>
       </div>
       <div id="error-msg">パスワードが正しくありません。入力し直してください。</div>
     </div>
   </div>
 
-  <div id="app-container" style="visibility: hidden; opacity: 0; transition: opacity 0.5s ease;">
+  <div id="app-container">
     <aside class="sidebar">
-      <div class="sidebar-title">✉️ 318mail</div>
-      <div class="menu-item active">📥 受信トレイ</div>
-      <div class="menu-item">⭐ お気に入り</div>
-      <div class="menu-item">📤 送信済み</div>
-      <div class="menu-item">🗑️ ゴミ箱</div>
+      <div class="sidebar-title">
+        <i class="fa-regular fa-envelope"></i> 318mail
+      </div>
+      <div class="menu-item active" data-target="inbox-view">
+        <i class="fa-solid fa-inbox"></i> 受信トレイ
+      </div>
+      <div class="menu-item" data-target="star-view">
+        <i class="fa-regular fa-star"></i> お気に入り
+      </div>
+      <div class="menu-item" data-target="sent-view">
+        <i class="fa-regular fa-paper-plane"></i> 送信済み
+      </div>
+      <div class="menu-item" data-target="trash-view">
+        <i class="fa-regular fa-trash-can"></i> ゴミ箱
+      </div>
     </aside>
 
     <main class="main-content">
-      <div class="header">受信トレイ</div>
+      <div class="header" id="current-menu-title">受信トレイ</div>
       
       <div class="email-list">
-        <div class="email-item">
-          <div class="star">☆</div>
-          <div class="email-body">
-            <div class="email-header-line">
-              <span class="sender">318mail System</span>
-              <span class="time">たった今</span>
+        
+        <div id="inbox-view" class="menu-view active-view">
+          <div class="email-item">
+            <button class="star-btn" onclick="toggleStar(this)"><i class="fa-regular fa-star"></i></button>
+            <div class="email-body">
+              <div class="email-header-line">
+                <span class="sender">318mail セキュリティ部</span>
+                <span class="time">たった今</span>
+              </div>
+              <div class="subject">セキュリティキー更新完了 <span>- 暗証番号が「tzohoots」に更新されました。これでログイン保護がさらに強固になりました。</span></div>
             </div>
-            <div class="subject">アップデート完了 <span>- Windows 10風のセキュアな壁紙とサインインUIが適用されました。</span></div>
+          </div>
+          <div class="email-item">
+            <button class="star-btn" onclick="toggleStar(this)"><i class="fa-regular fa-star"></i></button>
+            <div class="email-body">
+              <div class="email-header-line">
+                <span class="sender">GitHub Notifications</span>
+                <span class="time">10:30</span>
+              </div>
+              <div class="subject">リポジトリの同期成功 <span>- 新しいリキッドガラスのスタイルシートがCloudflare Pagesに正常に反映されました。</span></div>
+            </div>
           </div>
         </div>
 
-        <div class="email-item">
-          <div class="star active">★</div>
-          <div class="email-body">
-            <div class="email-header-line">
-              <span class="sender">Resend API</span>
-              <span class="time">昨日</span>
+        <div id="star-view" class="menu-view">
+          <div class="email-item">
+            <button class="star-btn active" onclick="toggleStar(this)"><i class="fa-solid fa-star"></i></button>
+            <div class="email-body">
+              <div class="email-header-line">
+                <span class="sender">重要通知マネージャー</span>
+                <span class="time">昨日</span>
+              </div>
+              <div class="subject">★ スター付きメール一覧 <span>- 半透明のガラス越しにデスクトップの砂浜が透けて見えるため、圧迫感がありません。</span></div>
             </div>
-            <div class="subject">Webhook接続成功 <span>- 318mail システムとのシームレスな連携が完了しました。</span></div>
           </div>
         </div>
+
+        <div id="sent-view" class="menu-view">
+          <div class="email-item">
+            <button class="star-btn" onclick="toggleStar(this)"><i class="fa-regular fa-star"></i></button>
+            <div class="email-body">
+              <div class="email-header-line">
+                <span class="sender">宛先: Friend</span>
+                <span class="time">2日前</span>
+              </div>
+              <div class="subject">Re: 暗証番号変えた？ <span>- 新しい独自の8桁のシークレット文字列を設定したよ。推測はほぼ不可能！</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="trash-view" class="menu-view">
+          <div class="email-item">
+            <button class="star-btn" onclick="toggleStar(this)"><i class="fa-regular fa-star"></i></button>
+            <div class="email-body">
+              <div class="email-header-line">
+                <span class="sender">旧暗号鍵アーカイブ</span>
+                <span class="time">1週間前</span>
+              </div>
+              <div class="subject">（削除済み）「hoe」のキーデータ <span>- 前バージョン（318）で利用していた古い暗号置換データです。</span></div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </main>
 
-    <button class="fab" onclick="alert('新規メール作成画面を開きます！')">作成</button>
+    <button class="fab" onclick="alert('新規メール作成画面を開きます！')">
+      <i class="fa-solid fa-pen"></i> 作成
+    </button>
   </div>
 
   <script>
-    async function checkPin() {
+    function updateClock() {
+      const now = new Date();
+      let hours = now.getHours().toString().padStart(2, '0');
+      let minutes = now.getMinutes().toString().padStart(2, '0');
+      document.getElementById('clock').innerText = `${hours}:${minutes}`;
+
+      const days = ['日', '月', '火', '水', '木', '金', '土'];
+      const dateText = `${now.getMonth() + 1}月${now.getDate()}日(${days[now.getDay()]})`;
+      document.getElementById('date').innerText = dateText;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    function showLoginScreen() {
+      const lockScreen = document.getElementById('lock-screen');
+      const loginScreen = document.getElementById('login-screen');
+      lockScreen.style.transform = 'translateY(-100vh)';
+      lockScreen.style.opacity = '0';
+      loginScreen.style.visibility = 'visible';
+      loginScreen.style.opacity = '1';
+      setTimeout(() => { document.getElementById('pin-input').focus(); }, 200);
+    }
+
+    function hideLoginScreen(event) {
+      const lockScreen = document.getElementById('lock-screen');
+      const loginScreen = document.getElementById('login-screen');
+      lockScreen.style.transform = 'translateY(0)';
+      lockScreen.style.opacity = '1';
+      loginScreen.style.visibility = 'hidden';
+      loginScreen.style.opacity = '0';
+    }
+
+    function checkPin() {
       const inputVal = document.getElementById('pin-input').value;
       const errorMsg = document.getElementById('error-msg');
-      const lockScreen = document.getElementById('lock-screen');
+      const loginScreen = document.getElementById('login-screen');
       const appContainer = document.getElementById('app-container');
-      const unlockBtn = document.getElementById('unlock-btn');
 
       if (!inputVal) return;
 
-      unlockBtn.innerText = "…";
-      unlockBtn.disabled = true;
+      // 指定された置換ルール
+      const secretRule = {
+        '0': 'z', '1': 'o', '2': 't', '3': 'h', '4': 'f',
+        '5': 'i', '6': 's', '7': 'v', '8': 'e', '9': 'n'
+      };
 
-      try {
-        const response = await fetch('/api/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pin: inputVal })
-        });
+      const cipherText = Array.from(inputVal)
+        .map(num => secretRule[num] || num)
+        .join('');
 
-        const data = await response.json();
+      // ★ 新しい秘密の合言葉「tzohoots」（打ち込む数字は 20131126 ）
+      const SECRET_KEY = "tzohoots";
 
-        if (response.ok && data.success) {
-          errorMsg.style.display = 'none';
-          
-          lockScreen.style.opacity = '0';
-          lockScreen.style.visibility = 'hidden';
-          
-          appContainer.style.visibility = 'visible';
-          appContainer.style.opacity = '1';
-        } else {
-          throw new Error('Invalid PIN');
-        }
-      } catch (error) {
+      if (cipherText === SECRET_KEY) {
+        errorMsg.style.display = 'none';
+        loginScreen.style.opacity = '0';
+        loginScreen.style.visibility = 'hidden';
+        
+        appContainer.style.visibility = 'visible';
+        appContainer.style.opacity = '1';
+      } else {
         errorMsg.style.display = 'block';
         document.getElementById('pin-input').value = '';
-      } finally {
-        unlockBtn.innerText = "➔";
-        unlockBtn.disabled = false;
       }
     }
 
     document.getElementById('pin-input').addEventListener('keypress', function (e) {
-      if (e.key === 'Enter') {
-        checkPin();
-      }
+      if (e.key === 'Enter') { checkPin(); }
     });
+
+    const menuItems = document.querySelectorAll('.menu-item');
+    const menuViews = document.querySelectorAll('.menu-view');
+    const currentMenuTitle = document.getElementById('current-menu-title');
+
+    menuItems.forEach(item => {
+      item.addEventListener('click', () => {
+        menuItems.forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+
+        const menuName = item.innerText.trim();
+        currentMenuTitle.innerText = menuName;
+
+        menuViews.forEach(view => view.classList.remove('active-view'));
+        
+        const targetId = item.getAttribute('data-target');
+        document.getElementById(targetId).classList.add('active-view');
+      });
+    });
+
+    function toggleStar(button) {
+      button.classList.toggle('active');
+      const icon = button.querySelector('i');
+      if (button.classList.contains('active')) {
+        icon.className = 'fa-solid fa-star';
+      } else {
+        icon.className = 'fa-regular fa-star';
+      }
+    }
   </script>
 </body>
 </html>
